@@ -23,7 +23,7 @@ UISlider with circle form for iOS. Handle UIControlEventValueChanged event and t
   s.platform     = :ios, '7.0'
   s.requires_arc = true
 
-  s.source_files = 'Pod/Classes'
+s.source_files = 'Pod/Classes/ARCurveSlider.{h,m}'
   s.resource_bundles = {
     'ARCurveSlider' => ['Pod/Assets/*.png']
   }
