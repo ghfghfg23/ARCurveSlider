@@ -1,0 +1,14 @@
+PODS:
+  - ARCurveSlider (0.1.0)
+
+DEPENDENCIES:
+  - ARCurveSlider (from `../`)
+
+EXTERNAL SOURCES:
+  ARCurveSlider:
+    :path: ../
+
+SPEC CHECKSUMS:
+  ARCurveSlider: ba8ae819a6b8ae88640b000adbfbf5a716573d41
+
+COCOAPODS: 0.34.1
