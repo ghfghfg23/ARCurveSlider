@@ -10,19 +10,15 @@
 Pod::Spec.new do |s|
   s.name             = "ARCurveSlider"
   s.version          = "0.1.0"
-  s.summary          = "A short description of ARCurveSlider."
+  s.summary          = "Curve slider control for iOS"
   s.description      = <<-DESC
-                       An optional longer description of ARCurveSlider
+UISlider with circle form for iOS. Handle UIControlEventValueChanged event and take value from "value" property.
 
-                       * Markdown format.
-                       * Don't worry about the indent, we strip it!
-                       DESC
-  s.homepage         = "https://github.com/<GITHUB_USERNAME>/ARCurveSlider"
-  # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
+                    DESC
+  s.homepage         = "https://github.com/ghfghfg23/ARCurveSlider"
   s.license          = 'MIT'
   s.author           = { "Andrey Ryabov" => "ghfghfg23@gmail.com" }
-  s.source           = { :git => "https://github.com/<GITHUB_USERNAME>/ARCurveSlider.git", :tag => s.version.to_s }
-  # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
+  s.source           = { :git => "https://github.com/ghfghfg23/ARCurveSlider.git", :tag => s.version.to_s }
 
   s.platform     = :ios, '7.0'
   s.requires_arc = true
