@@ -9,7 +9,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "ARCurveSlider"
-  s.version          = "0.1.0"
+  s.version          = "0.1.1"
   s.summary          = "Curve slider control for iOS"
   s.description      = <<-DESC
 UISlider with circle form for iOS. Handle UIControlEventValueChanged event and take value from "value" property.

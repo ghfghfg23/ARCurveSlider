@@ -11,12 +11,12 @@
 //#define DEBUG_CONTROL
 
 #pragma mark - Utility
-void radianRangeAdjust(CGFloat *angle) {
-    if (*angle < 0) {
+void radianRangeAdjust(float *angle) {
+    if (*angle < 0.0f) {
         *angle = 2 * M_PI + *angle;
         radianRangeAdjust(angle);
     }
-    if (*angle > M_PI * 2) {
+    if (*angle > M_PI * 2.0f) {
         *angle = *angle - 2 * M_PI;
         radianRangeAdjust(angle);
     }
@@ -33,17 +33,19 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 @interface ARCurveSlider () {
     UIBezierPath *_touchSliderPath;
     CGFloat _widthSlider;
-    CGFloat _radius;
-    CGFloat _startAngle;
-    CGFloat _endAngle;
+    float _radius;
+    float _startAngle;
+    float _endAngle;
     
-    CGFloat _angleDistance;
+    float _angleDistance;
     
     CGPoint _centerPoint;
     BOOL _clockwise;
-    CGFloat _value;
+    float _value;
     
     BOOL _needFullRedraw;
+    
+    BOOL _isTracking;
 
     CAShapeLayer *_maskSliderProgressPresentationLayer;
     CAShapeLayer *_buttonPresentationLayer;
@@ -83,9 +85,9 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     _value = 0.9f;
     _widthSlider = 44.0f;
 
-    _startAngle = -1.00;
-    _endAngle = M_PI_2;
-    _clockwise = NO;
+    _startAngle = 0.00;
+    _endAngle = M_PI;
+    _clockwise = YES;
     
     _buttonRadius = 16.0f;
     _needFullRedraw = YES;
@@ -140,7 +142,7 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 - (void)normalizeAngles {
     radianRangeAdjust(&_startAngle);
     radianRangeAdjust(&_endAngle);
-    CGFloat clockwiseSign = _clockwise ? 1 : -1;
+    float clockwiseSign = _clockwise ? 1 : -1;
     _angleDistance = (_endAngle - _startAngle) * clockwiseSign;
     radianRangeAdjust(&_angleDistance);
 }
@@ -194,6 +196,17 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     return path;
 }
 
+- (float)value {
+    return _value;
+}
+
+- (void)setValue:(float)value {
+    if (_isTracking)
+        return;
+    _value = value;
+    [self setNeedsLayout];
+}
+
 - (void)layoutSubviews {
     [super layoutSubviews];
     if (_needFullRedraw) {
@@ -207,18 +220,18 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (void)updateView {
-    CGFloat anchorAngle = _clockwise ? _startAngle : _endAngle;
-    CGFloat value = _clockwise ? _value : 1 - _value;
-    CGFloat progressAngle = anchorAngle + (value * _angleDistance);
+    float anchorAngle = _clockwise ? _startAngle : _endAngle;
+    float value = _clockwise ? _value : 1 - _value;
+    float progressAngle = anchorAngle + (value * _angleDistance);
     radianRangeAdjust(&progressAngle);
     _buttonPresentationLayer.position = pointWithCenterRadiusAngle(_centerPoint, _radius, progressAngle);
     
     CGFloat addition = 4.0f;
     CGFloat maskRadius = addition + _radius;
     UIBezierPath *path = [UIBezierPath bezierPath];
-    CGFloat sign = _clockwise ? 1 : -1;
-    CGFloat additionAngle = sign * 2*asinf(addition/(2*_radius));
-    CGFloat correctedStartAngle = _startAngle - additionAngle;
+    float sign = _clockwise ? 1 : -1;
+    float additionAngle = sign * 2*asinf(addition/(2*_radius));
+    float correctedStartAngle = _startAngle - additionAngle;
     [path moveToPoint:_centerPoint];
     [path addLineToPoint:pointWithCenterRadiusAngle(_centerPoint, maskRadius, correctedStartAngle)];
     [path addArcWithCenter:_centerPoint radius:maskRadius startAngle:correctedStartAngle endAngle:progressAngle clockwise:_clockwise];
@@ -236,6 +249,7 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     if (touchInSliderPath) {
         BOOL touchInButtonRadius = [self touchInCircleWithPoint:touchPoint circleCenter:_buttonPresentationLayer.position];
         if(touchInButtonRadius) {
+            _isTracking = YES;
             return YES;
         }
     }
@@ -265,6 +279,7 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
+    _isTracking = NO;
     [self roundValue];
 }
 
@@ -280,10 +295,10 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (CGFloat)relativeAngleFromPoint:(CGPoint)point {
-    CGFloat angle = [self angleFromPoint:point];
-    CGFloat zeroAngle = _startAngle;
+    float angle = [self angleFromPoint:point];
+    float zeroAngle = _startAngle;
     radianRangeAdjust(&angle);
-    CGFloat relativeAngle = _clockwise ? angle - zeroAngle : zeroAngle - angle;
+    float relativeAngle = _clockwise ? angle - zeroAngle : zeroAngle - angle;
     radianRangeAdjust(&relativeAngle);
     return relativeAngle ;
 }
