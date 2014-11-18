@@ -8,7 +8,7 @@
 
 #import "ARCurveSlider.h"
 
-#define DEBUG_CONTROL
+//#define DEBUG_CONTROL
 
 #pragma mark - Utility
 void radianRangeAdjust(CGFloat *angle) {

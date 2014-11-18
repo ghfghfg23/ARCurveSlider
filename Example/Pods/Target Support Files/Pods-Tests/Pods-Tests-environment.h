@@ -9,6 +9,6 @@
 // ARCurveSlider
 #define COCOAPODS_POD_AVAILABLE_ARCurveSlider
 #define COCOAPODS_VERSION_MAJOR_ARCurveSlider 0
-#define COCOAPODS_VERSION_MINOR_ARCurveSlider 1
-#define COCOAPODS_VERSION_PATCH_ARCurveSlider 1
+#define COCOAPODS_VERSION_MINOR_ARCurveSlider 2
+#define COCOAPODS_VERSION_PATCH_ARCurveSlider 0
 
