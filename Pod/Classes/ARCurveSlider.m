@@ -8,15 +8,15 @@
 
 #import "ARCurveSlider.h"
 
-//#define DEBUG_CONTROL
+#define DEBUG_CONTROL
 
 #pragma mark - Utility
-void radianRangeAdjust(float *angle) {
-    if (*angle < 0.0f) {
+void radianRangeAdjust(CGFloat *angle) {
+    if (*angle < 0) {
         *angle = 2 * M_PI + *angle;
         radianRangeAdjust(angle);
     }
-    if (*angle > M_PI * 2.0f) {
+    if (*angle > M_PI * 2) {
         *angle = *angle - 2 * M_PI;
         radianRangeAdjust(angle);
     }
@@ -33,23 +33,27 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 @interface ARCurveSlider () {
     UIBezierPath *_touchSliderPath;
     CGFloat _widthSlider;
-    float _radius;
-    float _startAngle;
-    float _endAngle;
+    CGFloat _radius;
+    CGFloat _startAngle;
+    CGFloat _endAngle;
     
-    float _angleDistance;
+    CGFloat _angleDistance;
     
     CGPoint _centerPoint;
     BOOL _clockwise;
-    float _value;
+    CGFloat _value;
     
     BOOL _needFullRedraw;
-    
-    BOOL _isTracking;
 
     CAShapeLayer *_maskSliderProgressPresentationLayer;
+    CAShapeLayer *_maskSliderAvailabilityPresentationLayer;
     CAShapeLayer *_buttonPresentationLayer;
     CGFloat _buttonRadius;
+    
+    CAShapeLayer *_touchBackCurveLayer;
+    CAShapeLayer *_touchAvailabilityCurveLayer;
+    CAShapeLayer *_touchFrontCurveLayer;
+    UIColor *_sliderBackColorWithHalfAlpha;
     
 #ifdef DEBUG_CONTROL
     UILabel *_startLabel;
@@ -85,9 +89,9 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     _value = 0.9f;
     _widthSlider = 44.0f;
 
-    _startAngle = 0.00;
-    _endAngle = M_PI;
-    _clockwise = YES;
+    _startAngle = -1.00;
+    _endAngle = M_PI_2;
+    _clockwise = NO;
     
     _buttonRadius = 16.0f;
     _needFullRedraw = YES;
@@ -104,6 +108,8 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     [self addObserver:self forKeyPath:@"sliderBackColor" options:NSKeyValueObservingOptionNew context:nil];
     [self addObserver:self forKeyPath:@"sliderButtonColor" options:NSKeyValueObservingOptionNew context:nil];
     [self addObserver:self forKeyPath:@"sliderFrontColor" options:NSKeyValueObservingOptionNew context:nil];
+    [self addObserver:self forKeyPath:@"availableValue" options:NSKeyValueObservingOptionNew context:nil];
+    [self addObserver:self forKeyPath:@"availabilityEnabled" options:NSKeyValueObservingOptionNew context:nil];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
@@ -133,6 +139,14 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     
     [self drawPresentation];
     
+    CGFloat red = 0.0f;
+    CGFloat green = 0.0f;
+    CGFloat blue = 0.0f;
+    CGFloat alpha = 0.0f;
+    [_sliderBackColor getRed:&red green:&green blue:&blue alpha:&alpha];
+    _sliderBackColorWithHalfAlpha = [UIColor colorWithRed:red green:green blue:blue alpha:alpha*0.5f];
+    
+    
 #ifdef DEBUG_CONTROL
     [self drawSupportLabels];
 #endif
@@ -142,7 +156,7 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 - (void)normalizeAngles {
     radianRangeAdjust(&_startAngle);
     radianRangeAdjust(&_endAngle);
-    float clockwiseSign = _clockwise ? 1 : -1;
+    CGFloat clockwiseSign = _clockwise ? 1 : -1;
     _angleDistance = (_endAngle - _startAngle) * clockwiseSign;
     radianRangeAdjust(&_angleDistance);
 }
@@ -196,17 +210,6 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     return path;
 }
 
-- (float)value {
-    return _value;
-}
-
-- (void)setValue:(float)value {
-    if (_isTracking)
-        return;
-    _value = value;
-    [self setNeedsLayout];
-}
-
 - (void)layoutSubviews {
     [super layoutSubviews];
     if (_needFullRedraw) {
@@ -220,23 +223,38 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (void)updateView {
-    float anchorAngle = _clockwise ? _startAngle : _endAngle;
-    float value = _clockwise ? _value : 1 - _value;
-    float progressAngle = anchorAngle + (value * _angleDistance);
+    CGFloat anchorAngle = _clockwise ? _startAngle : _endAngle;
+    CGFloat value = _clockwise ? _value : 1 - _value;
+    CGFloat progressAngle = anchorAngle + (value * _angleDistance);
     radianRangeAdjust(&progressAngle);
     _buttonPresentationLayer.position = pointWithCenterRadiusAngle(_centerPoint, _radius, progressAngle);
     
     CGFloat addition = 4.0f;
-    CGFloat maskRadius = addition + _radius;
-    UIBezierPath *path = [UIBezierPath bezierPath];
-    float sign = _clockwise ? 1 : -1;
-    float additionAngle = sign * 2*asinf(addition/(2*_radius));
-    float correctedStartAngle = _startAngle - additionAngle;
-    [path moveToPoint:_centerPoint];
-    [path addLineToPoint:pointWithCenterRadiusAngle(_centerPoint, maskRadius, correctedStartAngle)];
-    [path addArcWithCenter:_centerPoint radius:maskRadius startAngle:correctedStartAngle endAngle:progressAngle clockwise:_clockwise];
-    [path closePath];
-    _maskSliderProgressPresentationLayer.path = path.CGPath;
+    CGFloat maskRadius = addition + _radius + 40;
+    UIBezierPath *progressPath = [UIBezierPath bezierPath];
+    CGFloat sign = _clockwise ? 1 : -1;
+    CGFloat additionAngle = sign * 2*asinf(addition/(2*_radius));
+    CGFloat correctedStartAngle = _startAngle - additionAngle;
+    [progressPath moveToPoint:_centerPoint];
+    [progressPath addLineToPoint:pointWithCenterRadiusAngle(_centerPoint, maskRadius, correctedStartAngle)];
+    [progressPath addArcWithCenter:_centerPoint radius:maskRadius startAngle:correctedStartAngle endAngle:progressAngle clockwise:_clockwise];
+    [progressPath closePath];
+    _maskSliderProgressPresentationLayer.path = progressPath.CGPath;
+    if (_availabilityEnabled && _availableValue < 1.0f) {
+        CGFloat availabilityValue = _clockwise ? _availableValue : 1 - _availableValue;
+        CGFloat availabilityAngle = anchorAngle + (availabilityValue * _angleDistance);
+        radianRangeAdjust(&availabilityAngle);
+        UIBezierPath *availabilityPath = [UIBezierPath bezierPath];
+        [availabilityPath moveToPoint:_centerPoint];
+        [availabilityPath addLineToPoint:pointWithCenterRadiusAngle(_centerPoint, _radius, _startAngle)];
+        [availabilityPath addArcWithCenter:_centerPoint radius:maskRadius startAngle:_startAngle endAngle:availabilityAngle clockwise:_clockwise];
+        [availabilityPath closePath];
+        _maskSliderAvailabilityPresentationLayer.path = availabilityPath.CGPath;
+        _touchBackCurveLayer.fillColor = _sliderBackColorWithHalfAlpha.CGColor;
+    } else {
+        _touchBackCurveLayer.fillColor = _sliderBackColor.CGColor;
+    }
+
 #ifdef DEBUG_CONTROL
     _valueLabel.text = [NSString stringWithFormat:@"%.5f", _value];
 #endif
@@ -249,7 +267,6 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
     if (touchInSliderPath) {
         BOOL touchInButtonRadius = [self touchInCircleWithPoint:touchPoint circleCenter:_buttonPresentationLayer.position];
         if(touchInButtonRadius) {
-            _isTracking = YES;
             return YES;
         }
     }
@@ -270,16 +287,20 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 - (BOOL)continueTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
     CGPoint touchPoint = [touch locationInView:self];
     BOOL touchInSliderPath = [_touchSliderPath containsPoint:touchPoint];
-    if (!touchInSliderPath) {
+    BOOL touchInAvailabilityPath = _availableValue >= 1.0f || !_availabilityEnabled;
+    if (!touchInAvailabilityPath) {
+        touchInAvailabilityPath = CGPathContainsPoint(_maskSliderAvailabilityPresentationLayer.path, NULL, touchPoint, false);
+    }
+    if (!touchInSliderPath || !touchInAvailabilityPath) {
         [self roundValue];
         return NO;
     }
+
     [self adjustValueWithTargetPoint:touchPoint];
     return YES;
 }
 
 - (void)endTrackingWithTouch:(UITouch *)touch withEvent:(UIEvent *)event {
-    _isTracking = NO;
     [self roundValue];
 }
 
@@ -295,10 +316,10 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (CGFloat)relativeAngleFromPoint:(CGPoint)point {
-    float angle = [self angleFromPoint:point];
-    float zeroAngle = _startAngle;
+    CGFloat angle = [self angleFromPoint:point];
+    CGFloat zeroAngle = _startAngle;
     radianRangeAdjust(&angle);
-    float relativeAngle = _clockwise ? angle - zeroAngle : zeroAngle - angle;
+    CGFloat relativeAngle = _clockwise ? angle - zeroAngle : zeroAngle - angle;
     radianRangeAdjust(&relativeAngle);
     return relativeAngle ;
 }
@@ -311,9 +332,9 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 }
 
 - (void)roundValue {
-    if (_value < 0.05) {
+    if (_value < 0.005) {
         _value = 0.0f;
-    } else if (_value > 0.95) {
+    } else if (_value > 0.995) {
         _value = 1.0f;
     }
     [self setNeedsLayout];
@@ -334,6 +355,7 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 #pragma mark - Presentation
 - (void)drawPresentation {
     [self drawSliderBackPath];
+    [self drawSliderAvailabilityPath];
     [self drawSliderFrontPath];
     [self drawSliderDragButton];
 }
@@ -355,19 +377,29 @@ CGPoint pointWithCenterRadiusAngle(CGPoint center, CGFloat radius, CGFloat angle
 - (void)drawSliderFrontPath {
     _maskSliderProgressPresentationLayer = [CAShapeLayer layer];
     UIBezierPath *path = [self bezierPathWithArcCenter:_centerPoint radius:_radius startAngle:_startAngle endAngle:_endAngle clockwise:_clockwise width:8.0f roundCap:YES];
-    CAShapeLayer *touchSliderLayer = [CAShapeLayer layer];
-    touchSliderLayer.path = path.CGPath;
-    touchSliderLayer.fillColor = _sliderFrontColor.CGColor;
-    touchSliderLayer.mask = _maskSliderProgressPresentationLayer;
-    [self.layer addSublayer:touchSliderLayer];
+    _touchFrontCurveLayer = [CAShapeLayer layer];
+    _touchFrontCurveLayer.path = path.CGPath;
+    _touchFrontCurveLayer.fillColor = _sliderFrontColor.CGColor;
+    _touchFrontCurveLayer.mask = _maskSliderProgressPresentationLayer;
+    [self.layer addSublayer:_touchFrontCurveLayer];
 }
 
 - (void)drawSliderBackPath {
     UIBezierPath *path = [self bezierPathWithArcCenter:_centerPoint radius:_radius startAngle:_startAngle endAngle:_endAngle clockwise:_clockwise width:4.0f roundCap:YES];
-    CAShapeLayer *touchSliderLayer = [CAShapeLayer layer];
-    touchSliderLayer.path = path.CGPath;
-    touchSliderLayer.fillColor = _sliderBackColor.CGColor;
-    [self.layer addSublayer:touchSliderLayer];
+    _touchBackCurveLayer = [CAShapeLayer layer];
+    _touchBackCurveLayer.path = path.CGPath;
+    _touchBackCurveLayer.fillColor = _sliderBackColor.CGColor;
+    [self.layer addSublayer:_touchBackCurveLayer];
+}
+
+- (void)drawSliderAvailabilityPath {
+    _maskSliderAvailabilityPresentationLayer = [CAShapeLayer layer];
+    UIBezierPath *path = [self bezierPathWithArcCenter:_centerPoint radius:_radius startAngle:_startAngle endAngle:_endAngle clockwise:_clockwise width:4.0f roundCap:YES];
+    _touchAvailabilityCurveLayer = [CAShapeLayer layer];
+    _touchAvailabilityCurveLayer.path = path.CGPath;
+    _touchAvailabilityCurveLayer.fillColor = _sliderBackColor.CGColor;
+    _touchAvailabilityCurveLayer.mask = _maskSliderAvailabilityPresentationLayer;
+    [self.layer addSublayer:_touchAvailabilityCurveLayer];
 }
 
 @end

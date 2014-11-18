@@ -18,14 +18,14 @@
 {
     [super viewDidLoad];
 //    self.curveSlider.value = 0.3;
-    self.curveSlider.endAngle = 0.0f;
-    self.curveSlider.startAngle = -3.1415f;
+    self.curveSlider.startAngle = 0.0f;
+    self.curveSlider.endAngle = -3.1415f;
     self.curveSlider.widthSlider = 100.0f;
+    self.curveSlider.availabilityEnabled = YES;
     self.curveSlider.sliderFrontColor = [UIColor yellowColor];
     self.curveSlider.sliderBackColor = [UIColor redColor];
     self.curveSlider.sliderButtonColor = [UIColor orangeColor];
     [self.curveSlider setNeedsLayout];
-    [self.clockwiseSwitch setOn:self.curveSlider.clockwise];
 	// Do any additional setup after loading the view, typically from a nib.
 }
 
@@ -43,6 +43,13 @@
     self.curveSlider.clockwise = sender.isOn;
 }
 
+- (IBAction)availabilitySliderChangeValue:(UISlider *)sender {
+    self.curveSlider.availableValue = sender.value;
+}
+
+- (IBAction)availabilitySwitchChangeValue:(UISwitch *)sender {
+    self.curveSlider.availabilityEnabled = sender.isOn;
+}
 - (IBAction)curveSliderChangeValue:(ARCurveSlider *)sender {
     CGFloat value = [sender value];
     UIColor *backgroundColor = [UIColor colorWithHue:value saturation:0.85f brightness:0.97f alpha:1.0f];

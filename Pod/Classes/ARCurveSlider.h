@@ -10,11 +10,13 @@
 
 @interface ARCurveSlider : UIControl
 @property (nonatomic) CGFloat widthSlider;
-@property (nonatomic) float radius;
-@property (nonatomic) float startAngle;
-@property (nonatomic) float endAngle;
+@property (nonatomic) CGFloat radius;
+@property (nonatomic) CGFloat startAngle;
+@property (nonatomic) CGFloat endAngle;
 @property (nonatomic) BOOL clockwise;
-@property (nonatomic) float value;
+@property (nonatomic) BOOL availabilityEnabled;
+@property (nonatomic) CGFloat value;
+@property (nonatomic) CGFloat availableValue;
 @property (nonatomic, strong) UIColor *sliderFrontColor;
 @property (nonatomic, strong) UIColor *sliderBackColor;
 @property (nonatomic, strong) UIColor *sliderButtonColor;
