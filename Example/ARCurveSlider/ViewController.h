@@ -7,10 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
-#import <ARCurveSlider.h>
+#import "ARCurveSlider.h"
 
 @interface ViewController : UIViewController
 @property (nonatomic, strong) IBOutlet ARCurveSlider *curveSlider;
 @property (nonatomic, strong) IBOutlet UISlider *radiusSlider;
 @property (nonatomic, strong) IBOutlet UISwitch *clockwiseSwitch;
+@property (nonatomic, strong) IBOutlet UISlider *availabilitySlider;
+@property (nonatomic, strong) IBOutlet UISwitch *availabilitySwitch;
 @end

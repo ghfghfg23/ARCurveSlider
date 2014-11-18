@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="13F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="13F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="vXZ-lx-hvc">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -39,6 +40,18 @@
                                     <action selector="curveSliderChangeValue:" destination="vXZ-lx-hvc" eventType="valueChanged" id="6U4-0T-tfk"/>
                                 </connections>
                             </view>
+                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="1" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="jab-6W-OdQ">
+                                <rect key="frame" x="14" y="36" width="292" height="31"/>
+                                <connections>
+                                    <action selector="availabilitySliderChangeValue:" destination="vXZ-lx-hvc" eventType="valueChanged" id="gBd-8V-R4k"/>
+                                </connections>
+                            </slider>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iPs-Nk-Gfr">
+                                <rect key="frame" x="16" y="74" width="51" height="31"/>
+                                <connections>
+                                    <action selector="availabilitySwitchChangeValue:" destination="vXZ-lx-hvc" eventType="valueChanged" id="Jkj-dD-CAS"/>
+                                </connections>
+                            </switch>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -47,6 +60,8 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="availabilitySlider" destination="jab-6W-OdQ" id="Tga-sq-EjU"/>
+                        <outlet property="availabilitySwitch" destination="iPs-Nk-Gfr" id="3YU-8F-Ckt"/>
                         <outlet property="clockwiseSwitch" destination="loI-QU-c4J" id="c0w-aj-RIY"/>
                         <outlet property="curveSlider" destination="v0i-nv-z43" id="oEc-Es-DU9"/>
                         <outlet property="radiusSlider" destination="AZt-0o-AQp" id="IfR-eP-mgu"/>
